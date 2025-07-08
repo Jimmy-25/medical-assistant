@@ -13,7 +13,7 @@ This AI tool will analyze the content and suggest possible diagnoses based on th
 
 # Configure Google API
 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-model = genai.GenerativeModel("gemini-pro")
+model = genai.GenerativeModel("models/gemini-pro")  # ✅ Correct model name
 
 # File upload
 uploaded_file = st.file_uploader("📂 Upload medical report file (CSV, Excel, or PDF)", type=["csv", "xlsx", "xls", "pdf"])
