@@ -1,39 +1,58 @@
 import streamlit as st
 import pandas as pd
+import fitz  # PyMuPDF for PDF
 import google.generativeai as genai
 
 st.set_page_config(page_title="Medical Diagnosis AI Assistant", layout="centered")
 
 st.title("🧠 Medical Diagnosis Interpreter")
-st.markdown("Upload a CSV file or paste test results manually. The AI will analyze the data and suggest possible diagnoses.")
+st.markdown("""
+Upload a **CSV, Excel, or PDF file**, or **paste the test results** below. 
+This AI tool will analyze the content and suggest possible diagnoses based on the information.
+""")
 
-# Configure API
+# Configure Google API
 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 model = genai.GenerativeModel("gemini-pro")
 
-# CSV Upload
-uploaded_file = st.file_uploader("📁 Upload CSV file with test results (optional)", type=["csv"])
+# File upload
+uploaded_file = st.file_uploader("📂 Upload medical report file (CSV, Excel, or PDF)", type=["csv", "xlsx", "xls", "pdf"])
 
-# Text Input
-text_input = st.text_area("📝 Or paste the lab test results or clinical notes here:", height=200)
+# Text area input
+text_input = st.text_area("📝 Or paste clinical/lab results manually below:", height=200)
 
-# Interpret Button
+# Button to analyze
 if st.button("🩺 Interpret Results"):
-    if not uploaded_file and not text_input.strip():
-        st.warning("Please upload a CSV or enter some text to proceed.")
-    else:
-        combined_text = ""
+    combined_text = ""
 
-        if uploaded_file:
-            try:
+    if uploaded_file:
+        file_type = uploaded_file.name.split(".")[-1].lower()
+
+        try:
+            if file_type == "csv":
                 df = pd.read_csv(uploaded_file)
                 combined_text += df.to_string(index=False)
-            except Exception as e:
-                st.error(f"Error reading the CSV file: {e}")
-        
-        if text_input.strip():
-            combined_text += "\n\n" + text_input.strip()
 
+            elif file_type in ["xlsx", "xls"]:
+                df = pd.read_excel(uploaded_file)
+                combined_text += df.to_string(index=False)
+
+            elif file_type == "pdf":
+                text = ""
+                pdf = fitz.open(stream=uploaded_file.read(), filetype="pdf")
+                for page in pdf:
+                    text += page.get_text()
+                combined_text += text.strip()
+
+        except Exception as e:
+            st.error(f"❌ Failed to read uploaded file: {e}")
+
+    if text_input.strip():
+        combined_text += "\n\n" + text_input.strip()
+
+    if combined_text.strip() == "":
+        st.warning("Please provide content via file upload or manual text.")
+    else:
         with st.spinner("Analyzing patient data..."):
             prompt = f"Based on these medical test results or descriptions, what could be the possible diagnosis?\n\n{combined_text}\n\nExplain simply."
             response = model.generate_content(prompt)
