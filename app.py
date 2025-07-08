@@ -55,6 +55,6 @@ if st.button("🩺 Interpret Results"):
     else:
         with st.spinner("Analyzing patient data..."):
             prompt = f"Based on these medical test results or descriptions, what could be the possible diagnosis?\n\n{combined_text}\n\nExplain simply."
-            response = model.generate_content(prompt)
+            response = model.generate_content([prompt])
             st.success("✅ Possible Interpretation:")
             st.markdown(response.text)
