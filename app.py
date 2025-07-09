@@ -27,7 +27,7 @@ with st.expander("🧪 Debug: Available Gemini Models"):
         st.error(f"Could not list models: {e}")
 
 # Use the correct model path
-model = genai.GenerativeModel("models/gemini-pro")
+model = genai.GenerativeModel("models/gemini-2.5-pro")
 
 # File uploader
 uploaded_file = st.file_uploader(
